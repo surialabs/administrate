@@ -49,7 +49,11 @@ module Administrate
     def order_by_association(relation)
       return order_by_count(relation) if has_many_attribute?(relation)
 
-      return order_by_id(relation) if belongs_to_attribute?(relation)
+      if belongs_to_attribute?(relation) && is_attribute_promoter(attribute)
+        return order_by_id(relation)
+      end
+
+      return order_by_name(relation) if belongs_to_attribute?(relation)
 
       relation
     end
@@ -63,6 +67,14 @@ module Administrate
 
     def order_by_id(relation)
       relation.reorder("#{attribute}_id #{direction}")
+    end
+
+    def order_by_name(relation)
+      relation.joins(attribute.to_sym).order("#{attribute.pluralize}.name #{direction}")
+    end
+
+    def is_attribute_promoter(attribute)
+      attribute.eql?('promoter')
     end
 
     def has_many_attribute?(relation)
